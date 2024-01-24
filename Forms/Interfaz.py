@@ -108,7 +108,7 @@ class InterfazConsultaRut:
     def mostrar_tabla_completa(self):
         consultas_db = SentenciasRUT()
         resultados_completos = consultas_db.obtener_todos_los_resultados_rut()
-        self.mostrar_resultados(resultados_completos, "Tabla Completa de consultarr")
+        self.mostrar_resultados(resultados_completos, "Consultas")
 
 
     def ver_info_proveedor(self):
@@ -138,6 +138,7 @@ class InterfazConsultaRut:
         text_widget.pack(expand=True, fill="both")
 
         mensaje = "Información del Proveedor:\n\n"
+        
 
         if 'proveedorrut' in resultados_combinados and resultados_combinados['proveedorrut']:
             mensaje += "ProveedorRUT:\n"

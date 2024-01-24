@@ -3,7 +3,7 @@ from Database.Conexion import ConexionMySQL
 import datetime
 
 class ProveedorRUES:
-    def __init__(self, provNit, provNombre, estado, camara_comercio, matricula, organizacion_juridica, categoria, actividad_economica):
+    def __init__(self, provNit, provNombre, estado, camara_comercio, matricula, organizacion_juridica, categoria, actividades_economicas):
         self.provNit = provNit
         self.provNombre = provNombre
         self.estado = estado
@@ -11,18 +11,13 @@ class ProveedorRUES:
         self.matricula = matricula
         self.organizacion_juridica = organizacion_juridica
         self.categoria = categoria
-        self.actividad_economica = actividad_economica
+        self.actividades_economicas = actividades_economicas
 
 class SentenciasRUES:
     def __init__(self):
         self.conexion = ConexionMySQL()
 
     def insertar_proveedor_rues_en_db(self, proveedor):
-        """
-        Inserta o actualiza la información de un proveedor RUES en la base de datos.
-
-        :param proveedor: Objeto de la clase ProveedorRUES.
-        """
         conn = self.conexion.conectar()
         cursor = conn.cursor()
 
@@ -31,23 +26,32 @@ class SentenciasRUES:
             fecha_actual = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             fecha_ultima_actualizacion = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+            # Insertar en la tabla proveedorrues
             cursor.execute(
-                f"INSERT INTO proveedorrues (ProvNit, ProvNombre, Estado, CamaraComercio, Matricula, OrganizacionJuridica, Categoria, FechaRegistro, FechaUltimaActualizacion, ActividadesEconomicas) "
-                f"VALUES ('{proveedor.provNit}', '{proveedor.provNombre}', '{proveedor.estado}', "
-                f"'{proveedor.camara_comercio}', '{proveedor.matricula}', '{proveedor.organizacion_juridica}', '{proveedor.categoria}', '{fecha_actual}', '{fecha_ultima_actualizacion}', '{proveedor.ActividadesEconomicas}') "
-                f"ON DUPLICATE KEY UPDATE ProvNombre = '{proveedor.provNombre}', Estado = '{proveedor.estado}', "
-                f"CamaraComercio = '{proveedor.camara_comercio}', Matricula = '{proveedor.matricula}', "
-                f"OrganizacionJuridica = '{proveedor.organizacion_juridica}', Categoria = '{proveedor.categoria}', "
-                f"FechaRegistro = '{fecha_actual}', "
-                f"FechaUltimaActualizacion = '{fecha_ultima_actualizacion}',"
-                f"ActividadesEconomicas = '{proveedor.actividad_economica}'"  # Corregir el nombre del atributo
+                f"INSERT INTO proveedorrues (ProvNit, ProvNombre, FechaRegistro, FechaUltimaActualizacion, Estado, CamaraComercio, Matricula, OrganizacionJuridica, Categoria, ActividadesEconomicas) "
+                f"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) "
+                f"ON DUPLICATE KEY UPDATE ProvNombre = %s, FechaUltimaActualizacion = %s, Estado = %s, CamaraComercio = %s, Matricula = %s, "
+                f"OrganizacionJuridica = %s, Categoria = %s, ActividadesEconomicas = %s",
+                (
+                    proveedor.provNit, proveedor.provNombre, fecha_actual, fecha_ultima_actualizacion, proveedor.estado,
+                    proveedor.camara_comercio, proveedor.matricula, proveedor.organizacion_juridica, proveedor.categoria,
+                    ', '.join(proveedor.actividades_economicas),  # Convertir la lista a cadena
+                    proveedor.provNombre, fecha_ultima_actualizacion, proveedor.estado,
+                    proveedor.camara_comercio, proveedor.matricula, proveedor.organizacion_juridica, proveedor.categoria,
+                    ', '.join(proveedor.actividades_economicas)  # Convertir la lista a cadena
                 )
-            
-            conn.commit()
+            )
+            conn.commit()  # Guardar cambios en la base de datos
+
+            mensaje = "La información ha sido actualizada correctamente."
 
         except Exception as e:
-            print(f"Error al insertar en la base de datos: {e}")
+            print(f"Error en la inserción en la base de datos: {e}")
+            mensaje = f"Error en la inserción en la base de datos: {e}"
         finally:
-            cursor.close()
+            # Siempre cierra la conexión, incluso en caso de excepción
+            if conn.cursor:
+                cursor.close()
             self.conexion.desconectar()
 
+        return mensaje

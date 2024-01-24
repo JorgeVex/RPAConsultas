@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 import re
 from tkinter import messagebox
 from Persistence.SentenciasRues import SentenciasRUES, ProveedorRUES
-
+import traceback
 
 class SeleniumRues:
     def __init__(self):
@@ -21,29 +21,32 @@ class SeleniumRues:
         identificacion_limpia = identificacion.replace('.', '').replace('-', '')
         return identificacion_limpia
 
-    def consultar_rues_con_selenium_headless(self, identificacion_limpia_rut):
-        if not identificacion_limpia_rut:
+    def consultar_rues_con_selenium_headless(self, entry_identificacion):
+        identificacion = entry_identificacion
+        identificacion_limpia = self.limpiar_identificacion(identificacion)
+
+        if not identificacion_limpia:
             messagebox.showinfo("Error", "Por favor, ingrese una identificación.")
             return None  # Retorna None para indicar que no se pudo realizar la consulta
 
         try:
             # Iniciar el WebDriver con las opciones configuradas
-            with webdriver.Chrome(options=self.chrome_options) as driver:
+            with webdriver.Chrome(self.chrome_options) as driver:
                 driver.get("https://www.rues.org.co/rm")
 
-                WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "txtSearchNIT")))
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "txtSearchNIT")))
 
                 input_identificacion = driver.find_element(By.ID, "txtSearchNIT")
                 input_identificacion.clear()
-                input_identificacion.send_keys(identificacion_limpia_rut)
+                input_identificacion.send_keys(identificacion_limpia)
 
                 driver.find_element(By.ID, "btnConsultaNIT").click()
 
                 # Verificar si la consulta no ha retornado resultados
                 no_resultado_element = driver.find_elements(By.XPATH, "//div[@id='card-info'][contains(@class, 'notice-info')][contains(text(), 'La consulta por NIT no ha retornado resultados')]")
                 if no_resultado_element:
-                    messagebox.showinfo("Información", "La consulta por NIT no ha retornado resultados.")
-                    return "Información no obtenida"  # Retorna un mensaje indicando que no se obtuvo información
+                    # Manejar el caso de consulta sin resultados
+                    return "Información no obtenida"
 
                 WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, "//table[@id='rmTable2']//tbody//td")))
 
@@ -59,7 +62,6 @@ class SeleniumRues:
                     for row in rows:
                         data_cells = row.find_all('td')
                         if data_cells:
-                            # Extraer información
                             razon_social = data_cells[0].text.strip()
                             sigla = data_cells[1].text.strip()
                             nit_celda = data_cells[2].text.strip()
@@ -68,66 +70,100 @@ class SeleniumRues:
                             matricula = data_cells[5].text.strip()
                             organizacion_juridica = data_cells[6].text.strip()
                             categoria = data_cells[7].text.strip()
-                            
 
-                            # Buscar el NIT completo dentro de la celda
                             nit_match = re.search(r'\b\d{8,12}\b', nit_celda)
                             nit_completo = nit_match.group() if nit_match else None
 
-                            # Verificar si el estado es "ACTIVA"
-                        # Verificar si el estado es "ACTIVA"
-                        if estado == "ACTIVA":
-                            # Agregar información al mensaje final
-                            
-                            driver.find_element(By.CSS_SELECTOR, ".odd > td:nth-child(1)").click()
-                            driver.find_element(By.LINK_TEXT, "Ver Detalle").click()
-                            
-                            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.XPATH, "//div[@class='card-body']/ul[@class='cleanlist']")))
-                            actividades_economicas_element = driver.find_element(By.XPATH, "//div[@class='card-body']/ul[@class='cleanlist']")
-                            actividades_economicas_lines = actividades_economicas_element.find_elements(By.XPATH, ".//li")
-                                
-                            actividades_economicas = []
-                            for line in actividades_economicas_lines:
-                                match = re.search(r'<b>(\d+)<\/b>&nbsp;(.+)', line.get_attribute("innerHTML"))
-                                if match:
-                                    codigo_actividad = match.group(1)
-                                    descripcion_actividad = match.group(2)
-                                    actividades_economicas.append((codigo_actividad, descripcion_actividad))
+                            if estado == "ACTIVA":
+                                try:
+                                    # Click en el primer botón "Ver Detalle"
+                                    print("Click en el primer botón 'Ver Detalle'")
+                                    driver.find_element(By.XPATH, "//*[@id='rmTable2']/tbody/tr[1]/td[1]").click()
+                                    driver.find_element(By.LINK_TEXT, "Ver Detalle").click()
 
-                            # Mover la creación de la cadena fuera del bucle para evitar que se repita
-                            actividades_economicas_str = ', '.join([f"{codigo_actividad}: {descripcion_actividad}" for codigo_actividad, descripcion_actividad in actividades_economicas])
+                                    # Esperar a que la página cargue después de las nuevas interacciones
+                                    WebDriverWait(driver, 30).until(
+                                        EC.presence_of_element_located((By.XPATH, "//div[@class='card-body']/ul[@class='cleanlist']"))
+                                    )
 
-                            mensaje_final_rues += (
-                                f"Razón Social: {razon_social}\n"
-                                f"Sigla: {sigla}\n"
-                                f"NIT: {nit_completo}\n"
-                                f"Estado: {estado}\n"
-                                f"Cámara de Comercio: {camara_comercio}\n"
-                                f"Matrícula: {matricula}\n"
-                                f"Organización Jurídica: {organizacion_juridica}\n"
-                                f"Categoría: {categoria}\n"
-                                f"\nActividades Económicas: \n {actividades_economicas_str}\n"
-                                f"\n{mensaje_final_rues}"
-                            )
+                                    # Obtener información de actividades económicas
+                                    actividades_economicas_element = driver.find_element(By.XPATH, "//div[@class='card-body']/ul[@class='cleanlist']")
+                                    actividades_economicas_lines = actividades_economicas_element.find_elements(By.XPATH, ".//li")
 
-                            proveedor_rues = SentenciasRUES()  # Usa la clase SentenciasRUES
-                            proveedor_rues.insertar_proveedor_rues_en_db(
-                                ProveedorRUES(
-                                    nit_completo, razon_social, estado, camara_comercio, matricula, organizacion_juridica, categoria, actividades_economicas_str
-                                )
-                            )
+                                    # Extraer información de las actividades económicas
+                                    actividades_economicas = []
+                                    for line in actividades_economicas_lines:
+                                        match = re.search(r'<b>(\d+)<\/b>&nbsp;(.+)', line.get_attribute("innerHTML"))
+                                        if match:
+                                            codigo_actividad = match.group(1)
+                                            actividades_economicas.append(codigo_actividad)
 
-                return mensaje_final_rues   # Retorna un mensaje indicando que la consulta fue exitosa
+                                    # Imprimir las actividades económicas obtenidas
+                                    print(f"Actividades Económicas: {actividades_economicas}")
 
-        except TimeoutException:
-            messagebox.showerror("Error", "Tiempo de espera agotado. La página puede haber tardado demasiado en cargar.")
-            return None  # Retorna None para indicar que no se pudo realizar la consulta
-        except NoSuchElementException as e:
-            messagebox.showerror("Error", f"No se pudo encontrar el elemento: {type(e).__name__} - {str(e)}")
-            return None  # Retorna None para indicar que no se pudo realizar la consulta
-        except WebDriverException as e:
-            messagebox.showerror("Error", f"Excepción del WebDriver: {str(e)}")
-            return None  # Retorna None para indicar que no se pudo realizar la consulta
+                                    # Insertar la información en la base de datos
+                                    proveedor = ProveedorRUES(
+                                        provNit=nit_completo, provNombre=razon_social, estado=estado,
+                                        camara_comercio=camara_comercio, matricula=matricula,
+                                        organizacion_juridica=organizacion_juridica, categoria=categoria,
+                                        actividades_economicas=actividades_economicas
+                                    )
+                                    self.sentencias_rues.insertar_proveedor_rues_en_db(proveedor)
+
+                                    mensaje_final_rues += (
+                                        f"Razón Social: {razon_social}\n"
+                                        f"Sigla: {sigla}\n"
+                                        f"NIT: {nit_completo}\n"
+                                        f"Estado: {estado}\n"
+                                        f"Cámara de Comercio: {camara_comercio}\n"
+                                        f"Matrícula: {matricula}\n"
+                                        f"Organización Jurídica: {organizacion_juridica}\n"
+                                        f"Categoría: {categoria}\n"
+                                        f"Actividades Económicas: {', '.join(actividades_economicas)}\n\n"
+                                    )
+
+                                except:
+                                    proveedor = ProveedorRUES(
+                                        provNit=nit_completo, provNombre=razon_social, estado=estado,
+                                        camara_comercio=camara_comercio, matricula=matricula,
+                                        organizacion_juridica=organizacion_juridica, categoria=categoria,
+                                        actividades_economicas=''
+                                    )
+                                    self.sentencias_rues.insertar_proveedor_rues_en_db(proveedor)  
+                                    
+                                    mensaje_final_rues += (
+                                        f"Razón Social: {razon_social}\n"
+                                        f"Sigla: {sigla}\n"
+                                        f"NIT: {nit_completo}\n"
+                                        f"Estado: {estado}\n"
+                                        f"Cámara de Comercio: {camara_comercio}\n"
+                                        f"Matrícula: {matricula}\n"
+                                        f"Organización Jurídica: {organizacion_juridica}\n"
+                                        f"Categoría: {categoria}\n"
+                                        f"\nActividades Económicas: No se encontraron actividades económicas\n\n"
+                                        )
+
+                    # Mover el return fuera del bucle
+                    return mensaje_final_rues.strip()
+
+                else:
+                    return "Información no obtenida"
+        except NoSuchElementException:
+            return "Error: Elemento no encontrado en la página"
+
+
         except Exception as e:
-            messagebox.showerror("Error", f"Ha ocurrido un error en la consulta: {type(e).__name__} - {str(e)}")
-            return None  # Retorna None para indicar que no se pudo realizar la consulta
+            messagebox.showerror(message='Documento no registrado en el RUES', title='¡Error!')
+            
+
+        except Exception as e:
+            traceback.print_exc()
+            return f"Error inesperado: {str(e)}"
+    
+    def is_recaptcha_present(self, driver):
+        try:
+            # Verificar la presencia del elemento que contiene el reCAPTCHA
+            driver.find_element(By.XPATH, "/html/body/div[1]/main")
+            return True
+        except NoSuchElementException:
+            return False

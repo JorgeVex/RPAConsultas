@@ -54,6 +54,8 @@ class ConsultasDB:
         finally:
             cursor.close()
             self.db.desconectar
+            
+
 
 # En la clase FuncionesJuntas
 class FuncionesJuntas:
@@ -133,7 +135,7 @@ class FuncionesJuntas:
         resultados_completos = consultas_db.consultar_todos_los_resultados()
 
         root_resultados = tk.Toplevel()
-        root_resultados.title("Tabla Completa de consultarr")
+        root_resultados.title("Consultas")
 
         columns = ('Id Consulta', 'Proveedor', 'Fecha consulta', 'Identificación', 'DV')
         tree = ttk.Treeview(root_resultados, columns=columns, show='headings')
