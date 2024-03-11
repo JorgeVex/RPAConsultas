@@ -27,7 +27,7 @@ class EstiloTkinter:
 class InterfazConsultaRut:
     def __init__(self, root, estilo):
         self.root = root
-        self.root.title("Consulta Rut")
+        self.root.title("Consulta Rut y RUES")
         self.window_width = 550
         self.window_height = 450
         self.resultados_combinados = None
@@ -46,7 +46,7 @@ class InterfazConsultaRut:
         self.create_widgets()
 
     def create_widgets(self):
-        label = tk.Label(self.root, text="Consulta RUT sin DV", font=("Onix", 14))
+        label = tk.Label(self.root, text="Consulta RUT y RUES sin dígito de verificación", font=("Onix", 14))
         label.pack()
 
         validate_cmd = self.root.register(self.validar_input)

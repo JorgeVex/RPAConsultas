@@ -1,4 +1,3 @@
-# Consultas.py
 import tkinter as tk
 from tkinter import ttk, messagebox
 import mysql.connector
@@ -7,10 +6,25 @@ from Util.SeleniumRut import SeleniumRut
 from Util.SeleniumRues import SeleniumRues
 
 class ConsultasDB:
+    """
+    Clase para realizar consultas a una base de datos MySQL.
+    """
     def __init__(self):
+        """
+        Constructor de la clase ConsultasDB.
+        """
         self.db = ConexionMySQL()
 
     def ver_consultas_identificacion_db(self, identificacion):
+        """
+        Método para ver las consultas asociadas a una identificación.
+
+        Parámetros:
+            identificacion (str): Identificación del proveedor.
+
+        Retorna:
+            list or None: Lista de consultas asociadas a la identificación si existen, None si no hay consultas o hay un error.
+        """
         try:
             conn = self.db.conectar()
             cursor = conn.cursor()
@@ -38,6 +52,12 @@ class ConsultasDB:
             self.db.desconectar()
 
     def consultar_todos_los_resultados(self):
+        """
+        Método para consultar todos los resultados de la tabla consultarr.
+
+        Retorna:
+            list or None: Lista de todos los resultados si existen, None si no hay resultados o hay un error.
+        """
         try:
             conn = self.db.conectar()
             cursor = conn.cursor()
@@ -53,16 +73,26 @@ class ConsultasDB:
             return None
         finally:
             cursor.close()
-            self.db.desconectar
-            
+            self.db.desconectar()
 
-
-# En la clase FuncionesJuntas
 class FuncionesJuntas:
+    """
+    Clase para ejecutar funciones relacionadas con consultas.
+    """
     def __init__(self):
+        """
+        Constructor de la clase FuncionesJuntas.
+        """
         pass
 
     def funciones_juntas(self, entry_identificacion):
+        """
+        Método para realizar consultas de RUT y RUES utilizando Selenium.
+
+        Parámetros:
+            entry_identificacion (str): Identificación del proveedor.
+
+        """
         try:
             # Crear una ventana modal para el mensaje de carga
             loading_window = tk.Toplevel()
@@ -131,6 +161,9 @@ class FuncionesJuntas:
 
 
     def mostrar_tabla_completa(self):
+        """
+        Método para mostrar todos los resultados en una tabla.
+        """
         consultas_db = ConsultasDB()
         resultados_completos = consultas_db.consultar_todos_los_resultados()
 
@@ -158,6 +191,13 @@ class FuncionesJuntas:
 
 
     def mostrar_resultados(self, resultados, title):
+        """
+        Método para mostrar los resultados en una ventana emergente en forma de tabla.
+
+        Parámetros:
+            resultados (list): Resultados de la consulta.
+            title (str): Título de la ventana emergente.
+        """
         if resultados:
             root_resultados = tk.Toplevel()
             root_resultados.title(title)
@@ -182,5 +222,3 @@ class FuncionesJuntas:
             root_resultados.mainloop()
         else:
             messagebox.showinfo("Información", "No hay resultados disponibles.")
-            
- 

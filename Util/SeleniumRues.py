@@ -11,17 +11,41 @@ from Persistence.SentenciasRues import SentenciasRUES, ProveedorRUES
 import traceback
 
 class SeleniumRues:
+    """
+    Clase para realizar consultas al Registro Único Empresarial y Social (RUES) utilizando Selenium.
+    """
     def __init__(self):
+        """
+        Constructor de la clase SeleniumRues.
+        """
         # Configuración para ejecutar en modo headless
         self.chrome_options = webdriver.ChromeOptions()
         self.chrome_options.add_argument("--headless")  # Habilitar el modo headless
         self.sentencias_rues = SentenciasRUES()
 
     def limpiar_identificacion(self, identificacion):
+        """
+        Limpia la identificación removiendo puntos y guiones.
+
+        Parámetros:
+            identificacion (str): Identificación a limpiar.
+
+        Retorna:
+            str: Identificación sin puntos ni guiones.
+        """
         identificacion_limpia = identificacion.replace('.', '').replace('-', '')
         return identificacion_limpia
 
     def consultar_rues_con_selenium_headless(self, entry_identificacion):
+        """
+        Consulta la información del RUES utilizando Selenium en modo headless.
+
+        Parámetros:
+            entry_identificacion (str): Identificación del proveedor.
+
+        Retorna:
+            str: Información del proveedor obtenida del RUES.
+        """
         identificacion = entry_identificacion
         identificacion_limpia = self.limpiar_identificacion(identificacion)
 
@@ -161,6 +185,15 @@ class SeleniumRues:
             return f"Error inesperado: {str(e)}"
     
     def is_recaptcha_present(self, driver):
+        """
+        Verifica si el reCAPTCHA está presente en la página.
+
+        Parámetros:
+            driver: Objeto WebDriver.
+
+        Retorna:
+            bool: True si el reCAPTCHA está presente, False en caso de que no.
+        """
         try:
             # Verificar la presencia del elemento que contiene el reCAPTCHA
             driver.find_element(By.XPATH, "/html/body/div[1]/main")

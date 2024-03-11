@@ -1,9 +1,24 @@
-# SentenciasRues.py
 from Database.Conexion import ConexionMySQL
 import datetime
 
 class ProveedorRUES:
+    """
+    Clase para representar un proveedor registrado en RUES.
+    """
     def __init__(self, provNit, provNombre, estado, camara_comercio, matricula, organizacion_juridica, categoria, actividades_economicas):
+        """
+        Constructor de la clase ProveedorRUES.
+
+        Parámetros:
+            provNit (str): NIT del proveedor.
+            provNombre (str): Nombre del proveedor.
+            estado (str): Estado del proveedor.
+            camara_comercio (str): Cámara de comercio del proveedor.
+            matricula (str): Matrícula del proveedor.
+            organizacion_juridica (str): Organización jurídica del proveedor.
+            categoria (str): Categoría del proveedor.
+            actividades_economicas (list): Lista de actividades económicas del proveedor.
+        """
         self.provNit = provNit
         self.provNombre = provNombre
         self.estado = estado
@@ -14,10 +29,25 @@ class ProveedorRUES:
         self.actividades_economicas = actividades_economicas
 
 class SentenciasRUES:
+    """
+    Clase para realizar operaciones relacionadas con la tabla proveedorrues en la base de datos.
+    """
     def __init__(self):
+        """
+        Constructor de la clase SentenciasRUES.
+        """
         self.conexion = ConexionMySQL()
 
     def insertar_proveedor_rues_en_db(self, proveedor):
+        """
+        Método para insertar o actualizar un proveedor RUES en la base de datos.
+
+        Parámetros:
+            proveedor (ProveedorRUES): Objeto ProveedorRUES con los datos del proveedor a insertar o actualizar.
+
+        Retorna:
+            str: Mensaje de confirmación o error.
+        """
         conn = self.conexion.conectar()
         cursor = conn.cursor()
 

@@ -10,18 +10,41 @@ import tkinter as tk
 from tkinter import messagebox
 from Persistence.SentenciasRut import SentenciasRUT
 
-
 class SeleniumRut:
+    """
+    Clase para realizar consultas al Registro Único Tributario (RUT) utilizando Selenium.
+    """
     def __init__(self):
+        """
+        Constructor de la clase SeleniumRut.
+        """
         # Configuración para ejecutar en modo headless
         self.chrome_options = webdriver.ChromeOptions()
         self.chrome_options.add_argument("--headless")  # Habilitar el modo headless
 
     def limpiar_identificacion(self, identificacion):
+        """
+        Limpia la identificación removiendo puntos y guiones.
+
+        Parámetros:
+            identificacion (str): Identificación a limpiar.
+
+        Retorna:
+            str: Identificación sin puntos ni guiones.
+        """
         identificacion_limpia = identificacion.replace('.', '').replace('-', '')
         return identificacion_limpia
 
     def consultar_rut_con_selenium_headless(self, entry_identificacion):
+        """
+        Consulta la información del RUT utilizando Selenium en modo headless.
+
+        Parámetros:
+            entry_identificacion (str or tk.Entry): Identificación del proveedor.
+
+        Retorna:
+            str: Información del proveedor obtenida del RUT.
+        """
         identificacion_limpia = self.limpiar_identificacion(entry_identificacion.get()) if isinstance(entry_identificacion, tk.Entry) else self.limpiar_identificacion(entry_identificacion)
 
         if not identificacion_limpia:
@@ -60,8 +83,6 @@ class SeleniumRut:
                     razonSocial = razonSocial_element.text
                     fecha_actual_element = driver.find_element(By.XPATH, "//td[contains(text(), 'Fecha Actual')]/following-sibling::td[@class='tipoFilaNormalVerde']")
                     fecha_str = fecha_actual_element.text if fecha_actual_element else "Fecha no encontrada"
-
-        
 
                     # Formatear la fecha en un formato reconocido por MySQL (por ejemplo, 'YYYY-MM-DD HH:MM:SS')
                     estado = driver.find_element(By.ID, "vistaConsultaEstadoRUT:formConsultaEstadoRUT:estado").text

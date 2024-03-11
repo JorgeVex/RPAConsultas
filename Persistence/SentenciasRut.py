@@ -3,24 +3,52 @@ from Database.Conexion import ConexionMySQL
 from Util.SeleniumRues import SeleniumRues
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter import messagebox
 import datetime
 
 class ProveedorRut:
+    """
+    Clase para representar un proveedor RUT.
+    """
     def __init__(self, numNit, razonSocial, dv, estado):
+        """
+        Constructor de la clase ProveedorRut.
+
+        Parámetros:
+            numNit (str): Número de NIT del proveedor.
+            razonSocial (str): Razón social del proveedor.
+            dv (str): Dígito de verificación del proveedor.
+            estado (str): Estado del proveedor.
+        """
         self.numNit = numNit
         self.razonSocial = razonSocial
         self.dv = dv
         self.estado = estado
 
 class ConsultaRUT:
+    """
+    Clase para representar una consulta RUT.
+    """
     def __init__(self, numNit, dv, fecha_str):
+        """
+        Constructor de la clase ConsultaRUT.
+
+        Parámetros:
+            numNit (str): Número de NIT consultado.
+            dv (str): Dígito de verificación consultado.
+            fecha_str (str): Fecha de la consulta en formato de cadena.
+        """
         self.numNit = numNit
         self.dv = dv
         self.fecha_str = fecha_str
 
 class SentenciasRUT:
+    """
+    Clase para realizar operaciones relacionadas con la tabla consultarr en la base de datos.
+    """
     def __init__(self):
+        """
+        Constructor de la clase SentenciasRUT.
+        """
         self.conexion = ConexionMySQL()
         self.selenium_rues = SeleniumRues()
 
@@ -32,12 +60,28 @@ class SentenciasRUT:
         self.desconectar()
 
     def conectar(self):
+        """
+        Establece la conexión a la base de datos.
+
+        Retorna:
+            object: Objeto de conexión a la base de datos.
+        """
         return self.conexion.conectar()
 
     def desconectar(self):
+        """
+        Cierra la conexión a la base de datos.
+        """
         self.conexion.desconectar()
 
     def insertar_proveedor_rut_en_db(self, razon_social, estado):
+        """
+        Inserta o actualiza un proveedor RUT en la base de datos.
+
+        Parámetros:
+            razon_social (str): Razón social del proveedor.
+            estado (str): Estado del proveedor.
+        """
         conn = self.conectar()
         if conn is None:
             print("No se pudo establecer la conexión a la base de datos.")
@@ -62,7 +106,8 @@ class SentenciasRUT:
         """
         Obtiene todos los registros de la tabla 'consultarr'.
 
-        :return: Una lista de tuplas que representan los resultados.
+        Retorna:
+            list: Lista de tuplas que representan los resultados.
         """
         print(type(self))  # Agrega esta línea para imprimir el tipo de objeto
         conn = self.conectar()
@@ -77,6 +122,15 @@ class SentenciasRUT:
         return resultados
 
     def obtener_info_proveedor(self, identificacion_limpia):
+        """
+        Obtiene información de proveedores de RUT y RUES para una identificación dada.
+
+        Parámetros:
+            identificacion_limpia (str): Identificación limpia del proveedor.
+
+        Retorna:
+            dict: Diccionario que contiene información combinada de proveedores de RUT y RUES.
+        """
         try:
             conn = self.conectar()
             cursor = conn.cursor()
@@ -112,9 +166,18 @@ class SentenciasRUT:
             print(f"Error al conectar a la base de datos: {e}")
             return None
 
-
-
     def insertar_proveedorrut_segunda(self, numNit, apellidos, nombres, dv, estado, fecha_Actual):
+        """
+        Inserta un proveedor RUT en la base de datos.
+
+        Parámetros:
+            numNit (str): Número de NIT del proveedor.
+            apellidos (str): Apellidos del proveedor.
+            nombres (str): Nombres del proveedor.
+            dv (str): Dígito de verificación del proveedor.
+            estado (str): Estado del proveedor.
+            fecha_Actual (datetime.datetime): Fecha actual.
+        """
         try:
             conn = self.conexion.conectar()
             cursor = conn.cursor()
@@ -140,6 +203,15 @@ class SentenciasRUT:
             self.conexion.desconectar()
 
     def insertar_proveedorrut_primera(self, numNit, razonSocial, dv, estado):
+        """
+        Inserta un proveedor RUT en la base de datos.
+
+        Parámetros:
+            numNit (str): Número de NIT del proveedor.
+            razonSocial (str): Razón social del proveedor.
+            dv (str): Dígito de verificación del proveedor.
+            estado (str): Estado del proveedor.
+        """
         try:
             conn = self.conexion.conectar()
             cursor = conn.cursor()
@@ -165,6 +237,13 @@ class SentenciasRUT:
             self.conexion.desconectar()
             
     def mostrar_resultados(self, resultados, title):
+        """
+        Muestra los resultados en una ventana modal.
+
+        Parámetros:
+            resultados (list): Lista de tuplas que representan los resultados.
+            title (str): Título de la ventana.
+        """
         root_resultados = tk.Toplevel()
         root_resultados.title(title)
 
